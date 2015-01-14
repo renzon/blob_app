@@ -118,7 +118,7 @@ setup(
     long_description=URL,
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
-    license="BSD",
+    license="MIT",
     url=URL,
     packages=find_packages(exclude=["tests.*", "tests"]),
     package_data=find_package_data(PACKAGE, only_in_packages=False),
