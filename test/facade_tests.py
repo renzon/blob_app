@@ -5,8 +5,12 @@ from google.appengine.ext.ndb.blobstore import BlobInfo
 
 from base import BlobstoreTestCase
 from blob_app import blob_facade as facade
+from blob_app.blob_commands import CreateOwnerToBlob
 from blob_app.blob_model import BlobFile
+from gaebusiness.business import CommandParallel
+from gaegraph.business_base import CreateArc
 from gaegraph.model import Node
+from mommygae import mommy
 
 
 class SaveAndListTests(BlobstoreTestCase):
@@ -29,6 +33,38 @@ class SaveAndListTests(BlobstoreTestCase):
         self.assertIsNotNone(blob_file)
         files = facade.list_blob_files_cmd(owner)()
         self.assertListEqual([blob_file], files)
+
+
+class ListImageTests(BlobstoreTestCase):
+    def test_list_without_owner_and_img_url_none(self, img_url=None):
+        blobs = [mommy.save_one(BlobFile, img_url=img_url) for i in xrange(3)]
+        blobs.reverse()  # The search is on desc order on back, this is the reason of this reversing
+        SOME = 'https://some.image.com'
+        blobs[0].img_url = SOME
+        blobs[0].put()
+        ANOTHER = 'https://default.image.com'
+        imgs = facade.list_imgs_cmd(default=ANOTHER)()
+        self.assertListEqual([SOME, ANOTHER, ANOTHER], imgs)
+
+    def test_list_without_owner_and_img_url_empyt(self):
+        self.test_list_without_owner_and_img_url_none('')
+
+    def test_list_with_owner_and_img_url_empty(self):
+        self.test_list_with_owner_and_img_url_none('')
+
+    def test_list_with_owner_and_img_url_none(self, img_url=None):
+        owner = Node()
+        owner.put()
+        blobs = [mommy.save_one(BlobFile, img_url=img_url) for i in xrange(3)]
+
+        CommandParallel(*(CreateOwnerToBlob(owner, b) for b in blobs))
+        blobs.reverse()  # The search is on desc order on back, this is the reason of this reversing
+        SOME = 'https://some.image.com'
+        blobs[0].img_url = SOME
+        blobs[0].put()
+        ANOTHER = 'https://default.image.com'
+        imgs = facade.list_imgs_cmd(owner=owner, default=ANOTHER)()
+        self.assertListEqual([SOME, ANOTHER, ANOTHER], imgs)
 
 
 class DeleteTests(BlobstoreTestCase):

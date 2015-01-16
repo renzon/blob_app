@@ -86,7 +86,7 @@ class UpdateBlobFileCommand(UpdateNode):
 
 class ListBlobFileCommand(ModelSearchCommand):
     def __init__(self):
-        super(ListBlobFileCommand, self).__init__(BlobFile.query_by_creation())
+        super(ListBlobFileCommand, self).__init__(BlobFile.query_by_creation_desc())
 
 
 class GetBlobFile(NodeSearch):

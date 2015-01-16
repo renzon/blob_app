@@ -23,3 +23,8 @@ class BlobFile(Node):
 
 class OwnerToBlob(Arc):
     destination = ndb.KeyProperty(BlobFile)
+
+    @classmethod
+    def default_order(cls):
+        return -cls.creation
+
