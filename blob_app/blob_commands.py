@@ -8,7 +8,8 @@ from google.appengine.api.images import create_rpc, get_serving_url
 from gaebusiness.business import Command, CommandParallel
 from gaebusiness.gaeutil import ModelSearchCommand
 from gaeforms.ndb.form import ModelForm
-from gaegraph.business_base import UpdateNode, DestinationsSearch, CreateArc, DeleteArcs, NodeSearch, DeleteNode
+from gaegraph.business_base import UpdateNode, DestinationsSearch, CreateArc, DeleteArcs, NodeSearch, DeleteNode, \
+    CreateSingleArc
 from blob_app.blob_model import BlobFile, OwnerToBlob, img_with_size, IMG_CACHE_PREFIX
 from gaegraph.model import destinations_cache_key, origins_cache_key
 
@@ -173,3 +174,7 @@ class DeleteBlobFiles(CommandParallel):
         super(DeleteBlobFiles, self).do_business()
         blob_keys = [c.result.blob_key for c in self.__delete_blob_cmds]
         blobstore.delete(blob_keys)
+
+
+class CreateSingleOwnerFile(CreateSingleArc):
+    arc_class = OwnerToBlob

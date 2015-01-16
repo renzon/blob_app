@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
-from google.appengine.api import memcache
 
+from google.appengine.api import memcache
 from google.appengine.ext.ndb.blobstore import BlobInfo
 
 from base import BlobstoreTestCase
@@ -9,7 +9,6 @@ from blob_app import blob_facade as facade
 from blob_app.blob_commands import CreateOwnerToBlob
 from blob_app.blob_model import BlobFile
 from gaebusiness.business import CommandParallel
-from gaegraph.business_base import CreateArc
 from gaegraph.model import Node
 from mommygae import mommy
 
@@ -62,7 +61,7 @@ class ListImageTests(BlobstoreTestCase):
         blob_key = self.save_blob()
         blobs = [mommy.save_one(BlobFile, img_url=img_url, blob_key=blob_key) for i in xrange(3)]
 
-        CommandParallel(*(CreateOwnerToBlob(owner, b) for b in blobs)).execute()
+        CommandParallel(*(facade.save_owner(owner, b) for b in blobs)).execute()
         blobs.reverse()  # The search is on desc order on back, this is the reason of this reversing
         SOME = 'https://some.image.com'
         blobs[0].img_url = SOME

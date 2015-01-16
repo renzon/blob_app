@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
 from blob_app.blob_commands import ListBlobFileCommand, BlobFileForm, \
-    SaveBlobFiles, ListBlobsFromOwnerCmd, SaveBlobFilesWithOwner, DeleteBlobFiles, GetBlobFile, ListImagesCmd
+    SaveBlobFiles, ListBlobsFromOwnerCmd, SaveBlobFilesWithOwner, DeleteBlobFiles, GetBlobFile, ListImagesCmd, \
+    CreateSingleOwnerFile
 
 
 def save_blob_files_cmd(blob_infos, owner=None):
@@ -16,6 +17,16 @@ def save_blob_files_cmd(blob_infos, owner=None):
     if owner is None:
         return SaveBlobFiles(*blob_infos)
     return SaveBlobFilesWithOwner(owner, *blob_infos)
+
+
+def save_owner(owner, blob_file):
+    """
+    Command to make a blog_file Owner
+    :param owner:
+    :param blob_file:
+    :return:
+    """
+    return CreateSingleOwnerFile(owner, blob_file)
 
 
 def list_blob_files_cmd(owner=None):
