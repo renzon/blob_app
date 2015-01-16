@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
-from gaegraph.business_base import NodeSearch, DeleteNode
-from blob_app.blob_commands import ListBlobFileCommand, SaveBlobFileCommand, UpdateBlobFileCommand, BlobFileForm, \
-    SaveBlobFiles, ListBlobsFromOwnerCmd, SaveBlobFilesWithOwner, DeleteBlobFiles, GetBlobFile, ListImgsCommand, \
-    ListImgsFromOwnerCmd
+from blob_app.blob_commands import ListBlobFileCommand, BlobFileForm, \
+    SaveBlobFiles, ListBlobsFromOwnerCmd, SaveBlobFilesWithOwner, DeleteBlobFiles, GetBlobFile, ListImagesCmd
 
 
 def save_blob_files_cmd(blob_infos, owner=None):
@@ -61,6 +59,11 @@ def delete_blob_file_cmd(*blob_file_ids):
 
 
 def list_imgs_cmd(size=32, owner=None, default=None):
-    if owner is None:
-        return ListImgsCommand()
-    return ListImgsFromOwnerCmd(owner)
+    """
+    Returns only the respective blob img. Usefull for apps that just need it, like in an avatar implementantion
+    :param size: The size of img
+    :param owner: The owner of imgs
+    :param default: default if imgs is not available. Usefull for shoing some default img.
+    :return: Command if img_list as result
+    """
+    return ListImagesCmd(size, owner, default)

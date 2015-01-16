@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
+from google.appengine.api import memcache
 
 from google.appengine.ext.ndb.blobstore import BlobInfo
 
@@ -44,8 +45,10 @@ class ListImageTests(BlobstoreTestCase):
         blobs[0].img_url = SOME
         blobs[0].put()
         ANOTHER = 'https://default.image.com'
-        imgs = facade.list_imgs_cmd(default=ANOTHER)()
-        self.assertListEqual([SOME, ANOTHER, ANOTHER], imgs)
+        cmd = facade.list_imgs_cmd(default=ANOTHER)
+        imgs = cmd()
+        self.assertListEqual([SOME + '=s32', ANOTHER, ANOTHER], imgs)
+        self.assertListEqual([SOME, img_url, img_url], memcache.get(cmd._cache_key))
 
     def test_list_without_owner_and_img_url_empyt(self):
         self.test_list_without_owner_and_img_url_none('')
@@ -65,8 +68,31 @@ class ListImageTests(BlobstoreTestCase):
         blobs[0].img_url = SOME
         blobs[0].put()
         ANOTHER = 'https://default.image.com'
-        imgs = facade.list_imgs_cmd(owner=owner, default=ANOTHER)()
-        self.assertListEqual([SOME, ANOTHER, ANOTHER], imgs)
+        cmd = facade.list_imgs_cmd(owner=owner, default=ANOTHER)
+        imgs = cmd()
+        self.assertListEqual([SOME + '=s32', ANOTHER, ANOTHER], imgs)
+        self.assertListEqual([SOME, img_url, img_url], memcache.get(cmd._cache_key))
+
+    def test_cache(self):
+        img_url = None
+        owner = Node()
+        owner.put()
+        blob_key = self.save_blob()
+        blobs = [mommy.save_one(BlobFile, img_url=img_url, blob_key=blob_key) for i in xrange(3)]
+
+        CommandParallel(*(CreateOwnerToBlob(owner, b) for b in blobs)).execute()
+        blobs.reverse()  # The search is on desc order on back, this is the reason of this reversing
+        SOME = 'https://some.image.com'
+        blobs[0].img_url = SOME
+        blobs[0].put()
+        ANOTHER = 'https://default.image.com'
+        cmd = facade.list_imgs_cmd(owner=owner, default=ANOTHER)
+        imgs = cmd()
+        self.assertListEqual([SOME + '=s32', ANOTHER, ANOTHER], imgs)
+        self.assertListEqual([SOME, img_url, img_url], memcache.get(cmd._cache_key))
+
+        facade.delete_blob_file_cmd(*blobs)
+        self.assertIsNone(memcache.get(cmd._cache_key))
 
 
 class DeleteTests(BlobstoreTestCase):

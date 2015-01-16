@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals
+from google.appengine.api import memcache
 
 from google.appengine.api.blobstore import blobstore
 from google.appengine.api.images import create_rpc, get_serving_url
@@ -8,7 +9,7 @@ from gaebusiness.business import Command, CommandParallel
 from gaebusiness.gaeutil import ModelSearchCommand
 from gaeforms.ndb.form import ModelForm
 from gaegraph.business_base import UpdateNode, DestinationsSearch, CreateArc, DeleteArcs, NodeSearch, DeleteNode
-from blob_app.blob_model import BlobFile, OwnerToBlob
+from blob_app.blob_model import BlobFile, OwnerToBlob, img_with_size, IMG_CACHE_PREFIX
 
 
 class BlobFileSaveForm(ModelForm):
@@ -66,8 +67,10 @@ class SaveBlobFiles(CommandParallel):
         super(SaveBlobFiles, self).do_business()
         self.result = [cmd.result for cmd in self]
 
+
 class CreateOwnerToBlob(CreateArc):
     arc_class = OwnerToBlob
+
 
 class SaveBlobFilesWithOwner(CommandParallel):
     def __init__(self, owner, *blob_infos):
@@ -88,8 +91,40 @@ class ListBlobFileCommand(ModelSearchCommand):
     def __init__(self):
         super(ListBlobFileCommand, self).__init__(BlobFile.query_by_creation_desc())
 
-class ListImgsCommand(ListBlobFileCommand):
-    pass
+
+class ListImagesCmd(Command):
+    def __init__(self, size=32, owner=None, default=None):
+        super(ListImagesCmd, self).__init__()
+        self.default = default
+        self.size = size
+        if owner is None:
+            self._cmd = ListBlobFileCommand()
+            self._cache_key = IMG_CACHE_PREFIX + self._cmd._cache_key()
+        else:
+            self._cmd = ListBlobsFromOwnerCmd(owner)
+            self._cache_key = IMG_CACHE_PREFIX + self._cmd._cache_key
+        self.result = []
+
+    def set_up(self):
+        try:
+            self.result = memcache.get(self._cache_key)
+        except Exception:
+            pass
+        if not self.result:
+            self._cmd.set_up()
+
+    def do_business(self):
+        if not self.result:
+            self._cmd.do_business()
+            result = self._cmd.result
+            if result:
+                self.result = [blob_file.img_url for blob_file in result]
+                try:
+                    memcache.set(self._cache_key, self.result)
+                except:
+                    pass
+        self.result = [img_with_size(self.size, i) if i else self.default
+                       for i in self.result]
 
 
 class GetBlobFile(NodeSearch):
@@ -102,9 +137,6 @@ class _DeleteBlobFile(DeleteNode):
 
 class ListBlobsFromOwnerCmd(DestinationsSearch):
     arc_class = OwnerToBlob
-
-class ListImgsFromOwnerCmd(ListBlobsFromOwnerCmd):
-    pass
 
 
 class DeleteOwnerToBlobArcs(DeleteArcs):
