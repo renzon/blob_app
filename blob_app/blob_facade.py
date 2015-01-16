@@ -2,7 +2,8 @@
 from __future__ import absolute_import, unicode_literals
 from gaegraph.business_base import NodeSearch, DeleteNode
 from blob_app.blob_commands import ListBlobFileCommand, SaveBlobFileCommand, UpdateBlobFileCommand, BlobFileForm, \
-    SaveBlobFiles, ListBlobsFromOwnerCmd, SaveBlobFilesWithOwner, DeleteBlobFiles, GetBlobFile
+    SaveBlobFiles, ListBlobsFromOwnerCmd, SaveBlobFilesWithOwner, DeleteBlobFiles, GetBlobFile, ListImgsCommand, \
+    ListImgsFromOwnerCmd
 
 
 def save_blob_files_cmd(blob_infos, owner=None):
@@ -57,3 +58,9 @@ def delete_blob_file_cmd(*blob_file_ids):
     :return: Command
     """
     return DeleteBlobFiles(*blob_file_ids)
+
+
+def list_imgs_cmd(size=32, owner=None, default=None):
+    if owner is None:
+        return ListImgsCommand()
+    return ListImgsFromOwnerCmd(owner)

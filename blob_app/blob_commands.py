@@ -88,6 +88,9 @@ class ListBlobFileCommand(ModelSearchCommand):
     def __init__(self):
         super(ListBlobFileCommand, self).__init__(BlobFile.query_by_creation_desc())
 
+class ListImgsCommand(ListBlobFileCommand):
+    pass
+
 
 class GetBlobFile(NodeSearch):
     _model_class = BlobFile
@@ -99,6 +102,9 @@ class _DeleteBlobFile(DeleteNode):
 
 class ListBlobsFromOwnerCmd(DestinationsSearch):
     arc_class = OwnerToBlob
+
+class ListImgsFromOwnerCmd(ListBlobsFromOwnerCmd):
+    pass
 
 
 class DeleteOwnerToBlobArcs(DeleteArcs):

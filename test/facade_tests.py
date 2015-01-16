@@ -37,7 +37,8 @@ class SaveAndListTests(BlobstoreTestCase):
 
 class ListImageTests(BlobstoreTestCase):
     def test_list_without_owner_and_img_url_none(self, img_url=None):
-        blobs = [mommy.save_one(BlobFile, img_url=img_url) for i in xrange(3)]
+        blob_key = self.save_blob()
+        blobs = [mommy.save_one(BlobFile, img_url=img_url, blob_key=blob_key) for i in xrange(3)]
         blobs.reverse()  # The search is on desc order on back, this is the reason of this reversing
         SOME = 'https://some.image.com'
         blobs[0].img_url = SOME
@@ -55,9 +56,10 @@ class ListImageTests(BlobstoreTestCase):
     def test_list_with_owner_and_img_url_none(self, img_url=None):
         owner = Node()
         owner.put()
-        blobs = [mommy.save_one(BlobFile, img_url=img_url) for i in xrange(3)]
+        blob_key = self.save_blob()
+        blobs = [mommy.save_one(BlobFile, img_url=img_url, blob_key=blob_key) for i in xrange(3)]
 
-        CommandParallel(*(CreateOwnerToBlob(owner, b) for b in blobs))
+        CommandParallel(*(CreateOwnerToBlob(owner, b) for b in blobs)).execute()
         blobs.reverse()  # The search is on desc order on back, this is the reason of this reversing
         SOME = 'https://some.image.com'
         blobs[0].img_url = SOME
