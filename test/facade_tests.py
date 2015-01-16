@@ -91,7 +91,16 @@ class ListImageTests(BlobstoreTestCase):
         self.assertListEqual([SOME + '=s32', ANOTHER, ANOTHER], imgs)
         self.assertListEqual([SOME, img_url, img_url], memcache.get(cmd._cache_key))
 
-        facade.delete_blob_file_cmd(*blobs)
+        blobs.insert(0, mommy.save_one(BlobFile, img_url=img_url, blob_key=blob_key))
+        CreateOwnerToBlob(owner, blobs[0]).execute()
+        self.assertIsNone(memcache.get(cmd._cache_key))
+
+        cmd = facade.list_imgs_cmd(owner=owner, default=ANOTHER)
+        imgs = cmd()
+        self.assertListEqual([ANOTHER, SOME + '=s32', ANOTHER, ANOTHER], imgs)
+        self.assertListEqual([img_url, SOME, img_url, img_url], memcache.get(cmd._cache_key))
+
+        facade.delete_blob_file_cmd(*blobs).execute()
         self.assertIsNone(memcache.get(cmd._cache_key))
 
 

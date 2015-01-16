@@ -10,6 +10,7 @@ from gaebusiness.gaeutil import ModelSearchCommand
 from gaeforms.ndb.form import ModelForm
 from gaegraph.business_base import UpdateNode, DestinationsSearch, CreateArc, DeleteArcs, NodeSearch, DeleteNode
 from blob_app.blob_model import BlobFile, OwnerToBlob, img_with_size, IMG_CACHE_PREFIX
+from gaegraph.model import destinations_cache_key, origins_cache_key
 
 
 class BlobFileSaveForm(ModelForm):
@@ -141,6 +142,24 @@ class ListBlobsFromOwnerCmd(DestinationsSearch):
 
 class DeleteOwnerToBlobArcs(DeleteArcs):
     arc_class = OwnerToBlob
+
+    def do_business(self):
+        super(DeleteOwnerToBlobArcs, self).do_business()
+
+        if self.result:
+            cache_keys = []
+            if self._DeleteArcs__origin:
+                cache_keys.append(IMG_CACHE_PREFIX + destinations_cache_key(self.arc_class, self._DeleteArcs__origin))
+            else:
+                for arc in self.result:
+                    cache_keys.append(IMG_CACHE_PREFIX + destinations_cache_key(self.arc_class, arc.origin))
+
+            if self._DeleteArcs__destination:
+                cache_keys.append(IMG_CACHE_PREFIX + origins_cache_key(self.arc_class, self._DeleteArcs__destination))
+            else:
+                for arc in self.result:
+                    cache_keys.append(IMG_CACHE_PREFIX + origins_cache_key(self.arc_class, arc.destination))
+            memcache.delete_multi(cache_keys)
 
 
 class DeleteBlobFiles(CommandParallel):
