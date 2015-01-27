@@ -8,7 +8,9 @@ from gaegraph.model import Node, Arc, origins_cache_key, destinations_cache_key
 
 
 def img_with_size(size, img_url):
-    return '%s=s%s' % (img_url, size)
+    if img_url and size:
+        return '%s=s%s' % (img_url, size)
+    return img_url if img_url else ''
 
 
 class BlobFile(Node):
@@ -21,10 +23,6 @@ class BlobFile(Node):
     img_url = ndb.TextProperty(default=None)  # Used only for images
 
     def img(self, size=None):
-        if self.img_url == '':
-            return ''
-        if size is None:
-            return self.img_url
         return img_with_size(size, self.img_url)
 
 
