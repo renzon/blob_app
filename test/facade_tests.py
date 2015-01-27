@@ -34,6 +34,18 @@ class SaveAndListTests(BlobstoreTestCase):
         files = facade.list_blob_files_cmd(owner)()
         self.assertListEqual([blob_file], files)
 
+    def test_img_url_for_non_img_files(self):
+        blob_key = self.save_blob()
+        blob_info = BlobInfo.get(blob_key)
+        facade.save_blob_files_cmd([blob_info]).execute()
+        blob_file = BlobFile.query().get()
+        blob_file.img_url = None
+        self.assertEqual('', blob_file.img())
+        self.assertEqual('', blob_file.img(32))
+        blob_file.img_url = ''
+        self.assertEqual('', blob_file.img())
+        self.assertEqual('', blob_file.img(32))
+
 
 class ListImageTests(BlobstoreTestCase):
     def test_list_without_owner_and_img_url_none(self, img_url=None):
