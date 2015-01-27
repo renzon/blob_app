@@ -45,7 +45,10 @@ class SaveBlobFileCommand(Command):
         self.__rpc = create_rpc(30)
 
     def set_up(self):
-        get_serving_url(self.blob_info, rpc=self.__rpc, secure_url=True)
+        try:
+            get_serving_url(self.blob_info, rpc=self.__rpc, secure_url=True)
+        except:
+            pass  # If can not generate img url, there is nothing to do
 
 
     def do_business(self):
@@ -54,7 +57,7 @@ class SaveBlobFileCommand(Command):
                              md5=blob_info.md5_hash, blob_key=blob_info.key())
         try:
             blob_file.img_url = self.__rpc.get_result()
-        except Exception:
+        except:
             pass  # there is nothing to do. Or it is not a image or it is greater than limit
         self._to_commit = blob_file
         self.result = blob_file
