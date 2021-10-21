@@ -1,5 +1,5 @@
 mock==1.0.1
-Babel==1.3
+Babel==2.9.1
 gaebusiness==4.5.2
 gaeforms==0.14
 gaegraph==3.6
